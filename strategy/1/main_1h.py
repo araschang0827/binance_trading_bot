@@ -1,25 +1,18 @@
-from shutil import ExecError
 import pandas as pd
 import ccxt
 import time
 import datetime
+from Module.ETL import *
+from Module.indicators import *
+import Module.constants as const
 
 symbol = 'BTCUSDT'
 interval = '1h'
 
-def ATR(DF, period=14):
-    df = DF.copy()
-    df['H-L'] = df['high'] - df['low']
-    df['H-PC'] = abs(df['high'] - df['close'].shift(1))
-    df['L-PC'] = abs(df['low'] - df['close'].shift(1))
-    df['TR'] = df[['H-L', 'H-PC', 'L-PC']].max(axis=1, skipna=False)
-    df['ATR'] = df['TR'].ewm(span=period, min_periods=period).mean()
-    return df['ATR']
-
 # initiate A&A Bot
 exchange = ccxt.binanceusdm({
-    'apiKey': 'qnWZgAfFaeofQLVCysgdcG2tjKuD7aDzCuk7IHT7hHRAWy9vQXQsVsotPup43M7N',
-    'secret': 'zpqxPiAFtTIrsnoOQn8dlldeFgCb5XEe7vaA0FO0hVxeu0eGWOyECghwEFwQXvGw',
+    'apiKey': const.binance_future_api_key,
+    'secret': const.binance_future_api_secret,
     'enableRateLimit': True,
     'option': {
         'defaultMarket': 'future',
@@ -35,22 +28,13 @@ while True:
     try:
         # fetch historical price
         df = pd.DataFrame(exchange.fetch_ohlcv('BTCUSDT',timeframe='1h', limit=1000))
-        df.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
-        df['time'] = pd.to_numeric(df['time'])
-        df['time'] = df['time'] / 1000
-        for i in range(len(df.index)):
-            df['time'][i] = datetime.datetime.fromtimestamp(df['time'][i])
-        df['open'] = pd.to_numeric(df['open'])
-        df['high'] = pd.to_numeric(df['high'])
-        df['low'] = pd.to_numeric(df['low'])
-        df['close'] = pd.to_numeric(df['close'])
-        df['volume'] = pd.to_numeric(df['volume'])
+        df = ohlcv_data_standarize(df)
 
         a = 40
         b = 47
         c = 13
-        df['5ema'] = df['close'].ewm(com=a, min_periods=a).mean()
-        df['20ema'] = df['close'].ewm(com=b, min_periods=b).mean()
+        df['5ema'] = EMA(df, a)
+        df['20ema'] = EMA(df, b)
         df['ATR'] = ATR(df, period=c)
         balance = exchange.fetch_balance()["info"]["assets"][6]["walletBalance"]
 

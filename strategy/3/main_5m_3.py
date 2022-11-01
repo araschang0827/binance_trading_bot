@@ -3,14 +3,18 @@ import ccxt
 import time
 import datetime
 import pandas_ta as ta
+from Module.ETL import *
+from Module.indicators import *
+import Module.constants as const
 
+##### 2 EMAs and Supertrend indicators #####
 symbol = 'BTCUSDT'
 interval = '5m'
 
 # initiate A&A Bot
 exchange = ccxt.binanceusdm({
-    'apiKey': 'qnWZgAfFaeofQLVCysgdcG2tjKuD7aDzCuk7IHT7hHRAWy9vQXQsVsotPup43M7N',
-    'secret': 'zpqxPiAFtTIrsnoOQn8dlldeFgCb5XEe7vaA0FO0hVxeu0eGWOyECghwEFwQXvGw',
+    'apiKey': const.binance_future_api_key,
+    'secret': const.binance_future_api_secret,
     'enableRateLimit': True,
     'option': {
         'defaultMarket': 'future',
@@ -30,21 +34,12 @@ while True:
             test_order = exchange.create_limit_sell_order('BTCUSDT', 0.001, 50000)
             # fetch historical price
             df = pd.DataFrame(exchange.fetch_ohlcv(symbol,timeframe=interval, limit=1000))
-            df.columns = ['time', 'open', 'high', 'low', 'close', 'volume']
-            df['time'] = pd.to_numeric(df['time'])
-            df['time'] = df['time'] / 1000
-            for i in range(len(df.index)):
-                df['time'][i] = datetime.datetime.fromtimestamp(df['time'][i])
-            df['open'] = pd.to_numeric(df['open'])
-            df['high'] = pd.to_numeric(df['high'])
-            df['low'] = pd.to_numeric(df['low'])
-            df['close'] = pd.to_numeric(df['close'])
-            df['volume'] = pd.to_numeric(df['volume'])
+            df = ohlcv_data_standarize(df)
 
             a = 26
             b = 83
-            df['5ema'] = df['close'].ewm(span=a, min_periods=a).mean()
-            df['20ema'] = df['close'].ewm(span=b, min_periods=b).mean()
+            df['5ema'] = EMA(df, a)
+            df['20ema'] = EMA(df, a)
             high = pd.Series(df['high'])
             low = pd.Series(df['low'])
             close = pd.Series(df['close'])

@@ -1,3 +1,4 @@
 .DS_Store
-indicators/.DS_Store
-strategy/.DS_Store
+Module/constants.py
+Module/.DS_Store
+test.ipynb
