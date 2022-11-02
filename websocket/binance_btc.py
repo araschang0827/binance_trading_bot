@@ -7,7 +7,6 @@ import json
 
 df = pd.DataFrame(columns=['date', 'symbol', 'high', 'low', 'close'])
 
-
 def on_message(ws, message):
     global df
     print()
@@ -32,6 +31,8 @@ def on_error(ws, error):
 def on_close(close_msg):
     print("### closed ###" + close_msg)
 
+def on_pong(wsapp, message):
+    print("Got a pong! No need to respond")
 
 def streamKline(currency, interval):
     websocket.enableTrace(False)
@@ -39,8 +40,9 @@ def streamKline(currency, interval):
     ws = websocket.WebSocketApp(socket,
                                 on_message=on_message,
                                 on_error=on_error,
-                                on_close=on_close)
-    ws.run_forever()
+                                on_close=on_close,
+                                on_pong=on_pong)
+    ws.run_forever(ping_interval=25, ping_timeout=10)
 
 
 streamKline('btcusdt', '1h')
