@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/Users/araschang/Desktop/coding/binance_trading_bot/')
 import pandas as pd
 import ccxt
 import time

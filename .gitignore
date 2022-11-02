@@ -2,3 +2,4 @@
 Module/constants.py
 Module/.DS_Store
 test.ipynb
+Module/__pycache__/
